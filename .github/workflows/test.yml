@@ -45,7 +45,7 @@ jobs:
           PLANTUML_DIR="${{ runner.temp }}/plantuml"
           mkdir -p $PLANTUML_DIR
           
-          PLANTUML_JAR_URL="[https://github.com/plantuml/plantuml/releases/download/v$](https://github.com/plantuml/plantuml/releases/download/v$){{ env.PLANTUML_VERSION }}/plantuml-${{ env.PLANTUML_VERSION }}.jar"
+          PLANTUML_JAR_URL="[https://github.com/plantuml/plantuml/releases/download/v$PLANTUML_VERSION/plantuml-$PLANTUML_VERSION.jar](https://github.com/plantuml/plantuml/releases/download/v$PLANTUML_VERSION/plantuml-$PLANTUML_VERSION.jar)"
           wget -O $PLANTUML_DIR/plantuml.jar "$PLANTUML_JAR_URL"
           
           # Tell Quarto where the JAR is located. This is the official documented way.
