@@ -30,31 +30,61 @@ jobs:
       # 2. Manual Quarto Installation
       - name: Install Quarto Manually via Wget
         run: |
+          # Use safe curly braces for robustness
           QUARTO_URL="https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/quarto-${QUARTO_VERSION}-linux-amd64.deb"
           wget "$QUARTO_URL" -O quarto.deb
           sudo dpkg -i quarto.deb
-          sudo apt-get install -f -y
+          sudo apt-get install -f -y 
 
-      # 3. DOWNLOAD PLANTUML JAR (Preparing the path)
-      - name: Download PlantUML JAR and prepare path
-        id: plantuml_path_prep # Assign an ID to this step
+      # 3. DOWNLOAD PLANTUML JAR AND CREATE SHELL WRAPPER
+      # This guarantees the 'plantuml' executable is on the $PATH for your Lua extension.
+      - name: Download PlantUML JAR and create executable wrapper
         run: |
-          PLANTUML_DIR="${{ runner.temp }}/plantuml"
-          mkdir -p $PLANTUML_DIR
-          PLANTUML_JAR_URL="https://github.com/plantuml/plantuml/releases/download/v${PLANTUML_VERSION}/plantuml-${PLANTUML_VERSION}.jar"
+          PLANTUML_DIR="/usr/local/share/plantuml"
+          PLANTUML_JAR="plantuml.jar"
+          # CLEAN URL: No Markdown pollution, using safe curly braces.
+          PLANTUML_URL="https://github.com/plantuml/plantuml/releases/download/v${PLANTUML_VERSION}/plantuml-${PLANTUML_VERSION}.jar"
           
-          # Download the JAR
-          wget -O $PLANTUML_DIR/plantuml.jar "$PLANTUML_JAR_URL"
+          # --- Installation ---
+          sudo mkdir -p $PLANTUML_DIR
+          sudo wget -O $PLANTUML_DIR/$PLANTUML_JAR "$PLANTUML_URL"
           
-          # Use set-output to make the full path available to the next step
-          echo "plantuml_jar_path=$PLANTUML_DIR/plantuml.jar" >> "$GITHUB_OUTPUT"
+          # 1. Create wrapper script at /usr/local/bin/plantuml
+          WRAPPER_PATH="/usr/local/bin/plantuml"
+          echo '#!/bin/sh' | sudo tee $WRAPPER_PATH > /dev/null
+          # Note: Must use /usr/local/share/plantuml/plantuml.jar for the path
+          echo "java -jar $PLANTUML_DIR/$PLANTUML_JAR \"\$@\"" | sudo tee -a $WRAPPER_PATH > /dev/null
+          sudo chmod +x $WRAPPER_PATH
+          
+          # --- Verification ---
+          echo "--- Verifying PlantUML Executable ---"
+          echo "PATH: $PATH"
+          if ! which plantuml; then
+              echo "Error: 'plantuml' command not found via 'which'. Lua lookup will fail."
+              exit 1
+          fi
+          plantuml -version
+          echo "Verification successful."
 
-      # 4. Render Document (FIX: Setting QUARTO_PLANTUML_PATH explicitly in the environment)
-      - name: Render document
-        env:
-          # Set the environment variable using the output from the previous step
-          QUARTO_PLANTUML_PATH: ${{ steps.plantuml_path_prep.outputs.plantuml_jar_path }}
-        run: quarto render
+      # 4. Render Document AND Check Artifact Integrity
+      - name: Render document and verify artifacts
+        run: |
+          HTML_FILE="example.html"
+
+          quarto render
+
+          # --- Integrity Check ---
+          if [ ! -f "$HTML_FILE" ]; then
+              echo "Error: Required artifact $HTML_FILE was NOT created."
+              exit 1
+          fi
+
+          if ls *.svg 1> /dev/null 2>&1; then
+              echo "SUCCESS: Found generated SVG artifact."
+          else
+              echo "Error: Generated PlantUML asset (*.svg) was NOT created. PlantUML failed to execute."
+              exit 1
+          fi
 
       # 5. Upload Artifacts
       - name: Upload rendered artifacts
