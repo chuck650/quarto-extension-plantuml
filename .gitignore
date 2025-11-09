@@ -2,10 +2,6 @@
 # 1. Quarto & Extension Output
 # ------------------------------------
 
-# Ignore the local installation folder when running 'quarto install' locally.
-# This folder is created inside your project's _extensions directory
-_extensions/
-
 # Quarto project cache/temporary files
 .quarto/
 .ipynb_checkpoints/
