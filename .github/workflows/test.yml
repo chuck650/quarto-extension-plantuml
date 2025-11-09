@@ -32,7 +32,7 @@ jobs:
       
       # 3. Setup Quarto
       - name: Set up Quarto
-        uses: quarto-dev/quarto-action/setup@v2
+        uses: quarto-dev/quarto-action@v2
 
       # 4. Render Document
       - name: Render document
