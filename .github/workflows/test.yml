@@ -22,40 +22,40 @@ jobs:
         uses: actions/checkout@v4
 
       # 1. Install Dependencies (Java, Graphviz, Wget)
-      # Uses the command line equivalent of our successful APT installs.
       - name: Install Core Dependencies
         run: |
           sudo apt-get update
-          # Install Graphviz and a minimal JRE for PlantUML
           sudo apt-get install -y graphviz openjdk-17-jre-headless wget unzip
 
-      # 2. Manual Quarto Installation (Skipping the broken action)
-      # Downloads the official Debian package and installs it directly.
+      # 2. Manual Quarto Installation
       - name: Install Quarto Manually via Wget
         run: |
           QUARTO_URL="https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/quarto-${QUARTO_VERSION}-linux-amd64.deb"
           wget "$QUARTO_URL" -O quarto.deb
           sudo dpkg -i quarto.deb
-          sudo apt-get install -f -y # Fix dependencies
+          sudo apt-get install -f -y
 
-      # 3. DOWNLOAD AND CONFIGURE PLANTUML
-      # Downloads the JAR and uses an environment variable to tell Quarto where to find it.
-      - name: Download PlantUML JAR and set environment
+      # 3. DOWNLOAD PLANTUML JAR (Preparing the path)
+      - name: Download PlantUML JAR and prepare path
+        id: plantuml_path_prep # Assign an ID to this step
         run: |
           PLANTUML_DIR="${{ runner.temp }}/plantuml"
           mkdir -p $PLANTUML_DIR
-          
           PLANTUML_JAR_URL="https://github.com/plantuml/plantuml/releases/download/v${PLANTUML_VERSION}/plantuml-${PLANTUML_VERSION}.jar"
-          echo "PlantUML JAR URL: $PLANTUML_JAR_URL"
+          
+          # Download the JAR
           wget -O $PLANTUML_DIR/plantuml.jar "$PLANTUML_JAR_URL"
           
-          # Tell Quarto where the JAR is located. This is the official documented way.
-          echo "QUARTO_PLANTUML_PATH=$PLANTUML_DIR/plantuml.jar" >> $GITHUB_ENV
+          # Use set-output to make the full path available to the next step
+          echo "plantuml_jar_path=$PLANTUML_DIR/plantuml.jar" >> "$GITHUB_OUTPUT"
 
-      # 4. Render Document
+      # 4. Render Document (FIX: Setting QUARTO_PLANTUML_PATH explicitly in the environment)
       - name: Render document
+        env:
+          # Set the environment variable using the output from the previous step
+          QUARTO_PLANTUML_PATH: ${{ steps.plantuml_path_prep.outputs.plantuml_jar_path }}
         run: quarto render
-        
+
       # 5. Upload Artifacts
       - name: Upload rendered artifacts
         uses: actions/upload-artifact@v4
