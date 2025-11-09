@@ -1,5 +1,4 @@
-name: Test Extension (Optimized)
-
+name: Test Extension
 on:
   push:
     paths:
@@ -10,29 +9,47 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-render: # Using user's job name
+  test-render:
     runs-on: ubuntu-latest
+    
+    # Define Quarto and PlantUML versions here for easy updates
+    env:
+      QUARTO_VERSION: 1.8.25
+      PLANTUML_VERSION: 1.2025.10
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      # 1. Install Graphviz Dependency
-      # PlantUML requires Graphviz for complex diagrams.
-      - name: Install Graphviz dependency
-        run: sudo apt-get update && sudo apt-get install -y graphviz
+      # 1. Install Dependencies (Java, Graphviz, Wget)
+      # Uses the command line equivalent of our successful APT installs.
+      - name: Install Core Dependencies
+        run: |
+          sudo apt-get update
+          # Install Graphviz and a minimal JRE for PlantUML
+          sudo apt-get install -y graphviz openjdk-17-jre-headless wget unzip
 
-      # 2. Setup Java (JRE for PlantUML)
-      # This provides the necessary Java Runtime Environment (JRE) for PlantUML.
-      - name: Set up Java (for PlantUML)
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-      
-      # 3. Setup Quarto
-      - name: Set up Quarto
-        uses: quarto-dev/quarto-action@v2
+      # 2. Manual Quarto Installation (Skipping the broken action)
+      # Downloads the official Debian package and installs it directly.
+      - name: Install Quarto Manually via Wget
+        run: |
+          QUARTO_URL="[https://github.com/quarto-dev/quarto-cli/releases/download/v$](https://github.com/quarto-dev/quarto-cli/releases/download/v$){{ env.QUARTO_VERSION }}/quarto-${{ env.QUARTO_VERSION }}-linux-amd64.deb"
+          wget "$QUARTO_URL" -O quarto.deb
+          sudo dpkg -i quarto.deb
+          sudo apt-get install -f -y # Fix dependencies
+
+      # 3. DOWNLOAD AND CONFIGURE PLANTUML
+      # Downloads the JAR and uses an environment variable to tell Quarto where to find it.
+      - name: Download PlantUML JAR and set environment
+        run: |
+          PLANTUML_DIR="${{ runner.temp }}/plantuml"
+          mkdir -p $PLANTUML_DIR
+          
+          PLANTUML_JAR_URL="[https://github.com/plantuml/plantuml/releases/download/v$](https://github.com/plantuml/plantuml/releases/download/v$){{ env.PLANTUML_VERSION }}/plantuml-${{ env.PLANTUML_VERSION }}.jar"
+          wget -O $PLANTUML_DIR/plantuml.jar "$PLANTUML_JAR_URL"
+          
+          # Tell Quarto where the JAR is located. This is the official documented way.
+          echo "QUARTO_PLANTUML_PATH=$PLANTUML_DIR/plantuml.jar" >> $GITHUB_ENV
 
       # 4. Render Document
       - name: Render document
