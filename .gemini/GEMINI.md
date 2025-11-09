@@ -1,0 +1,1 @@
+- This Quarto extension embeds PlantUML diagrams into documents. It uses a Lua filter to process `plantuml` code blocks, generates SVG images via the external `plantuml` command-line tool, and embeds the resulting diagram into the final output.

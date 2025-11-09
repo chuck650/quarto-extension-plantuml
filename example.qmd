@@ -1,0 +1,21 @@
+---
+title: "Embedding PlantUML Diagrams"
+subtitle: "A Simple Example"
+format: html
+---
+
+Embed PlantUML diagrams in Quarto documents using the `quarto-extension-plantuml` extension. 
+
+<h2 style="display: flex; align-items: center;">
+  <img src="https://simpleicons.org/icons/uml.svg" alt="UML Logo" style="height: 1em; margin-right: 0.5em;">
+  Embedding a PlantUML Diagram
+</h2>
+
+A simple PlantUML diagram.
+
+```{plantuml}
+@startuml
+Alice -> Bob: Authentication Request
+Bob --> Alice: Authentication Response
+@enduml
+```

@@ -1,0 +1,44 @@
+# ------------------------------------
+# 1. Quarto & Extension Output
+# ------------------------------------
+
+# Ignore the local installation folder when running 'quarto install' locally.
+# This folder is created inside your project's _extensions directory
+_extensions/
+
+# Quarto project cache/temporary files
+.quarto/
+.ipynb_checkpoints/
+.DS_Store
+*.html
+_site/
+*.svg
+example_files/
+
+# ------------------------------------
+# 2. General Git/System Files
+# ------------------------------------
+
+# Temporary files created by the OS
+*~
+*.swp
+.Trash-*
+
+# ------------------------------------
+# 3. VS Code Specific Files
+# ------------------------------------
+
+# VS Code settings directory
+.vscode/
+
+# Local history created by some VS Code extensions
+.history/
+
+# Log and temporary files
+*.log
+*.tmp
+
+/.luarc.json
+
+/.quarto/
+**/*.quarto_ipynb
