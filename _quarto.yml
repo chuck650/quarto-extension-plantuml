@@ -1,5 +1,7 @@
 project:
   type: default
+  execute:
+    enabled: false # <- Disables all code execution engines (Python/R/etc.) for testing purposes.
 
 filters:
   - plantuml

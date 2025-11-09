@@ -1,4 +1,4 @@
-name: Test Extension
+name: Test Extension (Optimized)
 
 on:
   push:
@@ -7,28 +7,43 @@ on:
   pull_request:
     paths:
       - '_extensions/**'
+  workflow_dispatch:
 
 jobs:
-  test-render:
+  test-render: # Using user's job name
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
+      # 1. Install Graphviz Dependency
+      # PlantUML requires Graphviz for complex diagrams.
+      - name: Install Graphviz dependency
+        run: sudo apt-get update && sudo apt-get install -y graphviz
 
-      - name: Set up Java
+      # 2. Setup Java (JRE for PlantUML)
+      # This provides the necessary Java Runtime Environment (JRE) for PlantUML.
+      - name: Set up Java (for PlantUML)
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
+      
+      # 3. Setup Quarto
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-action/setup@v2
 
-      - name: Install PlantUML
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y plantuml
-
+      # 4. Render Document
       - name: Render document
         run: quarto render
+        
+      # 5. Upload Artifacts
+      - name: Upload rendered artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: quarto-rendered-output
+          path: |
+            _site
+            *.html
+            *.svg
